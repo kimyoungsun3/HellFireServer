@@ -66,19 +66,19 @@ namespace CSampleServer
                             string text = _packet.pop_string();
                             Console.WriteLine(string.Format("newRoom {0}", text));
                             Program.room_create(this, text);
-                            CPacket response = CPacket.create((short)LOGIN_PROTO.CREATE_ROOM_OK);
+                            CPacket response = CPacket.Create((short)LOGIN_PROTO.CREATE_ROOM_OK);
                             response.push(m_SN);
                             send(response); //잘만들었으
                         }
                         else
-                            send(CPacket.create((short)LOGIN_PROTO.CREATE_ROOM_FAILED)); //이미 접속한 방이있어
+                            send(CPacket.Create((short)LOGIN_PROTO.CREATE_ROOM_FAILED)); //이미 접속한 방이있어
                     }
                     break;
                 case LOGIN_PROTO.ROOM_LIST_REQ:
 					{
 						Console.WriteLine("[C -> S] ROOM_LIST_REQ");
 
-						CPacket response = CPacket.create((short)LOGIN_PROTO.ROOM_LIST_ACK);
+						CPacket response = CPacket.Create((short)LOGIN_PROTO.ROOM_LIST_ACK);
                         int count = Program.roomlist.Count;
                         response.push(count);
                         for (int i = 0; i < count; i++) // Loop with for.
@@ -110,7 +110,7 @@ namespace CSampleServer
                         if(Program.room_connect(this, roomnum))
                         {
                                                             //성공
-                            CPacket response = CPacket.create((short)LOGIN_PROTO.ROOM_CONNECT_OK);
+                            CPacket response = CPacket.Create((short)LOGIN_PROTO.ROOM_CONNECT_OK);
 
                             response.push(m_myRoom.UserInfoList.Count);
                             response.push(m_SN);
@@ -120,14 +120,14 @@ namespace CSampleServer
                             }
                             send(response); //잘만들었으
 
-                            CPacket response2 = CPacket.create((short)LOGIN_PROTO.ROOM_CONNECT_OTHER);
+                            CPacket response2 = CPacket.Create((short)LOGIN_PROTO.ROOM_CONNECT_OTHER);
                             response2.push(m_SN);
                             m_myRoom.BroadCast(response2, this);
                         }
                         else
                         {
                             //실패
-                            send(CPacket.create((short)LOGIN_PROTO.ROOM_CONNECT_FAILED));
+                            send(CPacket.Create((short)LOGIN_PROTO.ROOM_CONNECT_FAILED));
                         }
                     }
                     break;
@@ -139,7 +139,7 @@ namespace CSampleServer
                             string text = _packet.pop_string();
                             Console.WriteLine(string.Format("text {0}", text));
 
-                            CPacket response = CPacket.create((short)LOGIN_PROTO.CHAT_MSG_REQ);
+                            CPacket response = CPacket.Create((short)LOGIN_PROTO.CHAT_MSG_REQ);
                             response.push(m_SN);
                             response.push(text);
                             m_myRoom.BroadCast(response, this);
@@ -159,13 +159,13 @@ namespace CSampleServer
 						listUserInfo.Add(NewUser);
 						Console.WriteLine("Connect" + NewUser.Name);
 
-						CPacket response1 = CPacket.create((short)LOGIN_PROTO.LOGIN_REPLY);
+						CPacket response1 = CPacket.Create((short)LOGIN_PROTO.LOGIN_REPLY);
 						response1.push(m_SN);
 						response1.push(NewUser.Name);
 						BroadCast(response1);
 
 
-						CPacket response = CPacket.create((short)LOGIN_PROTO.USER_CONNECT);
+						CPacket response = CPacket.Create((short)LOGIN_PROTO.USER_CONNECT);
 						response.push(m_SN);
 						response.push(NewUser.Name);
 						send(response);
@@ -174,7 +174,7 @@ namespace CSampleServer
 						{
 							if (m_SN != listUserInfo[i].SN)
 							{
-								CPacket response3 = CPacket.create((short)LOGIN_PROTO.LOGIN_REPLY);
+								CPacket response3 = CPacket.Create((short)LOGIN_PROTO.LOGIN_REPLY);
 								response3.push(listUserInfo[i].SN);
 								response3.push(listUserInfo[i].Name);
 								send(response3);

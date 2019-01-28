@@ -13,19 +13,22 @@ namespace FreeNet
 		public IPeer owner		{ get; private set; }
 		public byte[] buffer	{ get; private set; }
 		public int position		{ get; private set; }
-		public Int16 protocol_id { get; private set; }
+		public Int16 code		{ get; private set; }
 
-		public static CPacket create(Int16 protocol_id)
+		//--------------------------------
+		//
+		//--------------------------------
+		public static CPacket Create(Int16 _code)
 		{
 			//CPacket packet = new CPacket();
-			CPacket packet = CPacketBufferManager.pop();
-			packet.set_protocol(protocol_id);
-			return packet;
+			CPacket _packet = CPacketBufferManager.Pop();
+			_packet.SetCode(_code);
+			return _packet;
 		}
 
-		public static void destroy(CPacket _packet)
+		public static void Destroy(CPacket _packet)
 		{
-			CPacketBufferManager.push(_packet);
+			CPacketBufferManager.Push(_packet);
 		}
 
 		public CPacket(byte[] _buffer, IPeer _owner)
@@ -37,6 +40,7 @@ namespace FreeNet
 			this.owner		= _owner;
 		}
 
+		
 		public CPacket()
 		{
 			this.buffer = new byte[1024];
@@ -44,12 +48,12 @@ namespace FreeNet
 
 		public Int16 pop_protocol_id()
 		{
-			return pop_int16();
+			return ReadCode();
 		}
 
 		public void copy_to(CPacket target)
 		{
-			target.set_protocol(this.protocol_id);
+			target.SetCode(this.code);
 			target.overwrite(this.buffer, this.position);
 		}
 
@@ -71,10 +75,10 @@ namespace FreeNet
 			return _data;
 		}
 
-		public Int16 pop_int16()
+		public Int16 ReadCode()
 		{
-			Int16 _data = BitConverter.ToInt16(this.buffer, this.position);
-			this.position += sizeof(Int16);
+			Int16 _data		= BitConverter.ToInt16(this.buffer, this.position);
+			this.position	+= sizeof(Int16);
 			return _data;
 		}
 
@@ -107,15 +111,15 @@ namespace FreeNet
 
 
 
-		public void set_protocol(Int16 protocol_id)
+		public void SetCode(Int16 _code)
 		{
-			this.protocol_id = protocol_id;
+			this.code = _code;
 			//this.buffer = new byte[1024];
 
 			// 헤더는 나중에 넣을것이므로 데이터 부터 넣을 수 있도록 위치를 점프시켜놓는다.
 			this.position = Defines.HEADERSIZE;
 
-			push_int16(protocol_id);
+			push_int16(_code);
 		}
 
 		public void record_size()

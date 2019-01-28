@@ -13,7 +13,7 @@ namespace FreeNet
 
 		public static void Initialize(int _capacity)
 		{
-			Console.WriteLine("CPacketBufferManager initialize capacity:"+ _capacity);
+			Console.WriteLine("CPacketBufferManager Initialize capacity:" + _capacity);
 			pool			= new Stack<CPacket>();
 			poolCapacity	= _capacity;
 			Allocate();
@@ -27,7 +27,7 @@ namespace FreeNet
 			}
 		}
 
-		public static CPacket pop()
+		public static CPacket Pop()
 		{
 			lock (tmpObject)
 			{
@@ -41,7 +41,7 @@ namespace FreeNet
 			}
 		}
 
-		public static void push(CPacket packet)
+		public static void Push(CPacket packet)
 		{
 			lock(tmpObject)
 			{

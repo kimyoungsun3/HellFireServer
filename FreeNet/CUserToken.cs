@@ -105,7 +105,7 @@ namespace FreeNet
 				{
 					// 큐에 무언가가 들어 있다면 아직 이전 전송이 완료되지 않은 상태이므로 큐에 추가만 하고 리턴한다.
 					// 현재 수행중인 SendAsync가 완료된 이후에 큐를 검사하여 데이터가 있으면 SendAsync를 호출하여 전송해줄 것이다.
-					Console.WriteLine("Queue is not empty. Copy and Enqueue a msg. protocol id : " + _msg.protocol_id);
+					Console.WriteLine("Queue is not empty. Copy and Enqueue a msg. protocol id : " + _msg.code);
 					this.sendingQueue.Enqueue(_packet);
 				}
 				else
@@ -238,7 +238,7 @@ namespace FreeNet
 			Console.WriteLine(this + " StartKeepAlive");
 			System.Threading.Timer keepalive = new System.Threading.Timer((object e) =>
 			{
-				CPacket msg = CPacket.create(0);
+				CPacket msg = CPacket.Create(0);
 				msg.push(0);
 				Send(msg);
 			}, null, 0, 3000);

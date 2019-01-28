@@ -15,7 +15,7 @@ namespace CSampleServer
 
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Program.Main");
+			Console.WriteLine("Program Main");
 			CPacketBufferManager.Initialize(2000);
 			userlist = new List<CGameUser>();
             roomlist = new List<CRoom>();
@@ -66,7 +66,7 @@ namespace CSampleServer
 		}
         static void ExitUserRoom(CGameUser user)
         {
-            CPacket response2 = CPacket.create((short)LOGIN_PROTO.ROOM_EXIT_OTHER);
+            CPacket response2 = CPacket.Create((short)LOGIN_PROTO.ROOM_EXIT_OTHER);
             response2.push(user.m_SN);
             user.m_myRoom.BroadCast(response2, user);
 
