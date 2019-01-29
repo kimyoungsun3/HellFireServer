@@ -12,8 +12,8 @@ namespace FreeNet
     {
 		int connectedCount;
 		CListener clientListener;
-		SocketAsyncEventArgsPool receiveEventArgsPool;
-		SocketAsyncEventArgsPool sendEventArgsPool;
+		SocketAsyncEventArgsPool receiveArgsPool;
+		SocketAsyncEventArgsPool sendArgsPool;
 		BufferManager bufferManager;
 
 		public delegate void SessionHandler(CUserToken token);
@@ -43,8 +43,8 @@ namespace FreeNet
 			this.bufferSize = 1024;
 
 			this.bufferManager			= new BufferManager(this.maxConnections * this.bufferSize * this.pre_alloc_count, this.bufferSize);
-			this.receiveEventArgsPool	= new SocketAsyncEventArgsPool(this.maxConnections);
-			this.sendEventArgsPool		= new SocketAsyncEventArgsPool(this.maxConnections);
+			this.receiveArgsPool	= new SocketAsyncEventArgsPool(this.maxConnections);
+			this.sendArgsPool		= new SocketAsyncEventArgsPool(this.maxConnections);
 
 			// Allocates one large byte buffer which all I/O operations use a piece of.  This gaurds 
 			// against memory fragmentation
@@ -71,7 +71,7 @@ namespace FreeNet
 					this.bufferManager.SetBuffer(_arg);
 
 					// add SocketAsyncEventArg to the pool
-					this.receiveEventArgsPool.Push(_arg);
+					this.receiveArgsPool.Push(_arg);
 				}
 
 				// send pool
@@ -85,7 +85,7 @@ namespace FreeNet
 					this.bufferManager.SetBuffer(_arg);
 
 					// add SocketAsyncEventArg to the pool
-					this.sendEventArgsPool.Push(_arg);
+					this.sendArgsPool.Push(_arg);
 				}
 			}
 		}
@@ -123,8 +123,8 @@ namespace FreeNet
 				_newClientSocket.Handle);
 
 			// 플에서 하나 꺼내와 사용한다.
-			SocketAsyncEventArgs _argsReceive	= this.receiveEventArgsPool.Pop();
-			SocketAsyncEventArgs _argsSend		= this.sendEventArgsPool.Pop();
+			SocketAsyncEventArgs _argsReceive	= this.receiveArgsPool.Pop();
+			SocketAsyncEventArgs _argsSend		= this.sendArgsPool.Pop();
 			CUserToken _userToken = null;
 			Console.WriteLine("  > argsReceive, argsSend -> 스택에서 뺴서");
 
@@ -203,27 +203,27 @@ namespace FreeNet
 		// This method is invoked when an asynchronous receive operation completes. 
 		// If the remote host closed the connection, then the socket is closed.  
 		//
-		private void ReceiveProcess(SocketAsyncEventArgs _argsReceive)
+		private void ReceiveProcess(SocketAsyncEventArgs _receiveArgs)
 		{
-			Console.WriteLine(this + " ReceiveProcess(받음처리)\r\n _argsReceive:{0}", _argsReceive);
+			Console.WriteLine(this + " ReceiveProcess(받음처리)\r\n _receiveArgs:{0}", _receiveArgs);
 			// check if the remote host closed the connection
-			CUserToken _token = _argsReceive.UserToken as CUserToken;
-			if (_argsReceive.BytesTransferred > 0 && _argsReceive.SocketError == SocketError.Success)
+			CUserToken _token = _receiveArgs.UserToken as CUserToken;
+			if (_receiveArgs.BytesTransferred > 0 && _receiveArgs.SocketError == SocketError.Success)
 			{
 				Console.WriteLine(" > ***** 메세지받음(처리시작) *****");
-				_token.ReceiveRead(_argsReceive.Buffer, _argsReceive.Offset, _argsReceive.BytesTransferred);
+				_token.ReceiveRead(_receiveArgs.Buffer, _receiveArgs.Offset, _receiveArgs.BytesTransferred);
 
-				Console.WriteLine(" > ***** 메세지받기(처리완료) *****\r\n > 소켓에 메세지 받기 비동기 등록)");
-				bool _pending = _token.socket.ReceiveAsync(_argsReceive);
+				Console.WriteLine(" > ***** 메세지받기(처리완료) *****\r\n > 소켓에 메세지 받기 비동기 재등록)");
+				bool _pending = _token.socket.ReceiveAsync(_receiveArgs);
 				if (!_pending)
 				{
 					// Oh! stack overflow??
-					ReceiveProcess(_argsReceive);
+					ReceiveProcess(_receiveArgs);
 				}
 			}
 			else
 			{
-				Console.WriteLine(" > 메세지받음(종료)\r\n error {0},  transferred {1}", _argsReceive.SocketError, _argsReceive.BytesTransferred);
+				Console.WriteLine(" > 메세지받음(종료)\r\n error {0},  transferred {1}", _receiveArgs.SocketError, _receiveArgs.BytesTransferred);
 				CloseClientSocket(_token);
 			}
 		}
@@ -249,14 +249,14 @@ namespace FreeNet
 			// Free the SocketAsyncEventArg so they can be reused by another client
 			// 버퍼는 반환할 필요가 없다. SocketAsyncEventArg가 버퍼를 물고 있기 때문에
 			// 이것을 재사용 할 때 물고 있는 버퍼를 그대로 사용하면 되기 때문이다.
-			if (this.receiveEventArgsPool != null)
+			if (this.receiveArgsPool != null)
 			{
-				this.receiveEventArgsPool.Push(_token.argsReceive);
+				this.receiveArgsPool.Push(_token.receiveArgs);
 			}
 
-			if (this.sendEventArgsPool != null)
+			if (this.sendArgsPool != null)
 			{
-				this.sendEventArgsPool.Push(_token.argsSend);
+				this.sendArgsPool.Push(_token.sendArgs);
 			}
 		}
     }

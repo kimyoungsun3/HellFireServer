@@ -8,10 +8,9 @@ namespace FreeNet
 {
 	public class CUserToken
 	{
-		public Socket socket { get; set; }
-
-		public SocketAsyncEventArgs argsReceive { get; private set; }
-		public SocketAsyncEventArgs argsSend { get; private set; }
+		public Socket socket					{ get; set; }
+		public SocketAsyncEventArgs receiveArgs { get; private set; }
+		public SocketAsyncEventArgs sendArgs	{ get; private set; }
 
 		// 바이트를 패킷 형식으로 해석해주는 해석기.
 		CMessageResolver messageResolve;
@@ -27,7 +26,7 @@ namespace FreeNet
 		public CUserToken()
 		{
 			//Console.WriteLine(this + " CUserToken");
-			this.lockQueue = new object();
+			this.lockQueue		= new object();
 
 			this.messageResolve	= new CMessageResolver();
 			this.peer			= null;
@@ -43,8 +42,8 @@ namespace FreeNet
 		public void SetEventArgs(SocketAsyncEventArgs _argsReceive, SocketAsyncEventArgs _argsSend)
 		{
 			Console.WriteLine(this + " SetEventArgs(CUserToken에 연결해두기)\r\n _argsReceive:{0}\r\n _argsSend:{1}", _argsReceive, _argsSend);
-			this.argsReceive	= _argsReceive;
-			this.argsSend		= _argsSend;
+			this.receiveArgs	= _argsReceive;
+			this.sendArgs		= _argsSend;
 		}
 
 		/// <summary>
@@ -69,7 +68,7 @@ namespace FreeNet
 			Console.WriteLine(this + " OnMessage _buffer:{0}", _buffer);
 			if (this.peer != null)
 			{
-				this.peer.on_message(_buffer);
+				this.peer.ParseCode(_buffer);
 			}
 		}
 
@@ -132,15 +131,15 @@ namespace FreeNet
 				_packet.WriteSize();
 
 				// 이번에 보낼 패킷 사이즈 만큼 버퍼 크기를 설정하고
-				this.argsSend.SetBuffer(this.argsSend.Offset, _packet.position);
+				this.sendArgs.SetBuffer(this.sendArgs.Offset, _packet.position);
 				// 패킷 내용을 SocketAsyncEventArgs버퍼에 복사한다.
-				Array.Copy(_packet.buffer, 0, this.argsSend.Buffer, this.argsSend.Offset, _packet.position);
+				Array.Copy(_packet.buffer, 0, this.sendArgs.Buffer, this.sendArgs.Offset, _packet.position);
 
 				// 비동기 전송 시작.
-				bool pending = this.socket.SendAsync(this.argsSend);
+				bool pending = this.socket.SendAsync(this.sendArgs);
 				if (!pending)
 				{
-					SendProcess(this.argsSend);
+					SendProcess(this.sendArgs);
 				}
 			}
 		}

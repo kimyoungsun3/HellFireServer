@@ -37,7 +37,7 @@ namespace FreeNet
 		/// <param name="buffer">
 		/// Socket버퍼로부터 복사된 CUserToken의 버퍼를 참조한다.
 		/// </param>
-		void on_message(Const<byte[]> buffer);
+		void ParseCode(Const<byte[]> buffer);
 
 
 		/// <summary>
@@ -50,9 +50,9 @@ namespace FreeNet
 		void send(CPacket msg);
 
 
-		void disconnect();
+		void Disconnect();
 
 
-		void process_user_operation(CPacket msg);
+		//void process_user_operation(CPacket msg);
 	}
 }

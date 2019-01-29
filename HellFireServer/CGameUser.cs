@@ -23,9 +23,9 @@ namespace CSampleServer
 	class CGameUser : IPeer
 	{
 	    public CUserToken token;
-
         public int m_SN = 0;
         static List<UserInfo> listUserInfo = new  List<UserInfo>();
+
 		public CGameUser(CUserToken _token)
 		{
 			Console.WriteLine(this + " Constructor _token:{0}", _token);
@@ -46,9 +46,9 @@ namespace CSampleServer
 			m_myRoom = _myRoom;
         }
 
-		void IPeer.on_message(Const<byte[]> _buffer)
+		void IPeer.ParseCode(Const<byte[]> _buffer)
 		{
-			Console.WriteLine(this + " IPeer.on_message buffer:{0}", _buffer);
+			Console.WriteLine(this + " IPeer.ParseCode buffer:{0}", _buffer);
 			// ex)
 			CPacket _packet		= new CPacket(_buffer.Value, this);
             LOGIN_PROTO _code	= (LOGIN_PROTO)_packet.pop_protocol_id();
@@ -231,23 +231,23 @@ namespace CSampleServer
         public void BroadCast(CPacket _packet)
 		{
 			Console.WriteLine(this + " BroadCast:{0}", _packet);
-			List<CGameUser> UserList = m_myRoom.UserInfoList;
-           foreach (CGameUser _client in UserList)   
+			List<CGameUser> _userList = m_myRoom.UserInfoList;
+           foreach (CGameUser _client in _userList)   
            {
                if (_client.token != this.token)
                    _client.token.Send(_packet);
            }
             //this.token.send(msg);
         }
-		void IPeer.disconnect()
+		void IPeer.Disconnect()
 		{
-			Console.WriteLine(this + " IPeer.disconnect");
+			Console.WriteLine(this + " IPeer.Disconnect");
 			this.token.socket.Disconnect(false);
 		}
 
-		void IPeer.process_user_operation(CPacket _packet)
-		{
-			Console.WriteLine(this + " IPeer.process_user_operation _packet:{0}", _packet);
-		}
+		////void IPeer.process_user_operation(CPacket _packet)
+		//{
+		//	Console.WriteLine(this + " IPeer.process_user_operation _packet:{0}", _packet);
+		//}
 	}
 }

@@ -114,17 +114,17 @@ namespace FreeNet
         /// AcceptAsync의 콜백 매소드
         /// </summary>
         /// <param name="_sender"></param>
-        /// <param name="_accepArgs">AcceptAsync 매소드 호출시 사용된 EventArgs</param>
-		void OnAcceptAsync(object _sender, SocketAsyncEventArgs _accepArgs)
+        /// <param name="_acceptArgs">AcceptAsync 매소드 호출시 사용된 EventArgs</param>
+		void OnAcceptAsync(object _sender, SocketAsyncEventArgs _acceptArgs)
 		{
-			Console.WriteLine(this + " OnAcceptAsync (신규유저접속시도)\r\n -> _sender:{0}\r\n -> _accepArgs:{1}", _sender, _accepArgs);
-			if (_accepArgs.SocketError == SocketError.Success)
+			Console.WriteLine(this + " OnAcceptAsync (신규유저접속시도)\r\n -> _sender:{0}\r\n -> _acceptArgs:{1}", _sender, _acceptArgs);
+			if (_acceptArgs.SocketError == SocketError.Success)
             {
 				Console.WriteLine("  -> NewClient Success");
 				// 접속에 따른 OS가 받아온 Socket를 SocketAsynEvnetArgs에 실어서 보내줌.
 				// 새로 생긴 소켓을 보관해 놓은뒤~
-                Socket _socket		= _accepArgs.AcceptSocket;
-				CUserToken _token	= _accepArgs.UserToken as CUserToken;
+                Socket _socket		= _acceptArgs.AcceptSocket;
+				CUserToken _token	= _acceptArgs.UserToken as CUserToken;
 
                 // 다음 연결을 받아들인다.
                 this.autoResetEvent.Set();
