@@ -47,7 +47,7 @@ namespace FreeNet
 		void OnRemoved();
 
 
-		void send(CPacket msg);
+		void SendCode(CPacket msg);
 
 
 		void Disconnect();

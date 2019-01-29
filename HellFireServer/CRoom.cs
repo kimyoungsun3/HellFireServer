@@ -9,38 +9,37 @@ namespace CSampleServer
 {
 	class CRoom
 	{
-        public string RoomName = "Default";
+        public string name = "Default";
+        public int number = 0;
+        public int playerMax = 8;
+        public int playerCount = 0;
 
+        public List<CGameUser> listGameUser = new  List<CGameUser>();
 
-        public int RoomNum = 0;
-        public int PlayerNumMax = 8;
-        public int CurrentPlayerNum = 0;
-
-        public List<CGameUser> UserInfoList = new  List<CGameUser>();
-
-
-        public void BroadCast(CPacket msg,CGameUser Sender)
+        public void BroadCast(CPacket _packet, CGameUser _senderClient)
         {
-            List<CGameUser> UserList = UserInfoList;
-            foreach (CGameUser client in UserList)
+            foreach (CGameUser _client in listGameUser)
             {
-                if (client.token != Sender.token)
-                    client.token.Send(msg);
+                if (_client.token != _senderClient.token)
+                    _client.token.SendCode(_packet);
             }
             //this.token.send(msg);
         }
         int RoomuserSn = 0;
         public bool UserInsert(CGameUser _user)
         {
-            if (CurrentPlayerNum < PlayerNumMax)
+            if (playerCount < playerMax)
             {
-                UserInfoList.Add(_user);
+                listGameUser.Add(_user);
                 _user.m_SN = RoomuserSn;
                 ++RoomuserSn;
-                ++CurrentPlayerNum;
+                ++playerCount;
                 return true;
-            }
-            return false;
+			}
+			else
+			{
+				return false;
+			}            
         }
 	}
 }

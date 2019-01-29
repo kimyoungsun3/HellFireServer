@@ -32,7 +32,6 @@ namespace FreeNet
 		{
 			Console.WriteLine(this + " Start host:{0} port:{1} backlog:{2}", _host, _port, _backlog);
 			this.acceptSocket = new Socket( AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
 			IPAddress _address;
 			if (_host == "0.0.0.0")
 			{
@@ -51,13 +50,14 @@ namespace FreeNet
 
 				this.acceptArgs				= new SocketAsyncEventArgs();
 				this.acceptArgs.Completed	+= new EventHandler<SocketAsyncEventArgs>(OnAcceptAsync);
+				
 
 				Thread _thread = new Thread(AcceptTcpClient);
 				_thread.Start();
 			}
 			catch (Exception _e)
 			{
-				Console.WriteLine(_e.Message);
+				Console.WriteLine(this + " error:" + _e.Message);
 			}
 		}
 

@@ -92,7 +92,7 @@ namespace FreeNet
 		///		현재 진행중인 SendAsync가 완료되었을 때 큐를 검사하여 나머지 패킷을 전송한다.
 		/// </summary>
 		/// <param name="_msg"></param>
-		public void Send(CPacket _msg)
+		public void SendCode(CPacket _msg)
 		{
 			Console.WriteLine(this + " Send _msg:{0}", _msg);
 			CPacket _packet = new CPacket();
@@ -239,7 +239,7 @@ namespace FreeNet
 			{
 				CPacket _packet = CPacket.Create(0);
 				_packet.WriteInt(0);
-				Send(_packet);
+				SendCode(_packet);
 			}, null, 0, 3000);
 		}
 	}
