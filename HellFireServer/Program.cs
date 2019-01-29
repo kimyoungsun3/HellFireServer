@@ -64,18 +64,18 @@ namespace CSampleServer
 				userlist.Remove(user);
 			}
 		}
-        static void ExitUserRoom(CGameUser user)
+        static void ExitUserRoom(CGameUser _user)
         {
-            CPacket response2 = CPacket.Create((short)LOGIN_PROTO.ROOM_EXIT_OTHER);
-            response2.push(user.m_SN);
-            user.m_myRoom.BroadCast(response2, user);
+            CPacket _response2 = CPacket.Create((short)LOGIN_PROTO.ROOM_EXIT_OTHER);
+            _response2.WriteInt(_user.m_SN);
+            _user.m_myRoom.BroadCast(_response2, _user);
 
-            user.m_myRoom.UserInfoList.Remove(user);
-            --user.m_myRoom.CurrentPlayerNum;
-            if (user.m_myRoom.CurrentPlayerNum <= 0)
+            _user.m_myRoom.UserInfoList.Remove(_user);
+            --_user.m_myRoom.CurrentPlayerNum;
+            if (_user.m_myRoom.CurrentPlayerNum <= 0)
             {
-                Console.WriteLine(string.Format("delRoom {0}", user.m_myRoom.RoomName));
-                remove_room(user.m_myRoom);
+                Console.WriteLine(string.Format("delRoom {0}", _user.m_myRoom.RoomName));
+                remove_room(_user.m_myRoom);
             }
         }
         public static void Exit_Room(CGameUser user)

@@ -11,9 +11,9 @@ namespace FreeNet
 	class CListener
 	{
         // 비동기 Accept를 위한 EventArgs.
-		SocketAsyncEventArgs argsAccept;
+		SocketAsyncEventArgs acceptArgs;
 
-		Socket socket;
+		Socket acceptSocket;
 
         // Accept처리의 순서를 제어하기 위한 이벤트 변수.
 		AutoResetEvent autoResetEvent;
@@ -31,7 +31,7 @@ namespace FreeNet
 		public void Start(string _host, int _port, int _backlog)
 		{
 			Console.WriteLine(this + " Start host:{0} port:{1} backlog:{2}", _host, _port, _backlog);
-			this.socket = new Socket( AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			this.acceptSocket = new Socket( AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
 			IPAddress _address;
 			if (_host == "0.0.0.0")
@@ -46,11 +46,11 @@ namespace FreeNet
 
 			try
 			{
-				socket.Bind(_ipEndPoint);
-				socket.Listen(_backlog);
+				acceptSocket.Bind(_ipEndPoint);
+				acceptSocket.Listen(_backlog);
 
-				this.argsAccept				= new SocketAsyncEventArgs();
-				this.argsAccept.Completed	+= new EventHandler<SocketAsyncEventArgs>(OnAcceptAsync);
+				this.acceptArgs				= new SocketAsyncEventArgs();
+				this.acceptArgs.Completed	+= new EventHandler<SocketAsyncEventArgs>(OnAcceptAsync);
 
 				Thread _thread = new Thread(AcceptTcpClient);
 				_thread.Start();
@@ -72,9 +72,9 @@ namespace FreeNet
 
 			while (true)
 			{
-				Console.WriteLine(" > AcceptTcpClient > 접속대기등록(socket.AcceptAsync(argsAccept))");
+				Console.WriteLine(" > AcceptTcpClient > 접속대기등록(acceptSocket.AcceptAsync(acceptArgs))");
 				// SocketAsyncEventArgs를 재사용 하기 위해서 null로 만들어 준다.
-				this.argsAccept.AcceptSocket = null;
+				this.acceptArgs.AcceptSocket = null;
 
 				bool _pending = true;
 				try
@@ -82,7 +82,7 @@ namespace FreeNet
 					// 비동기 accept를 호출하여 클라이언트의 접속을 받아들입니다.
 					// 비동기 매소드 이지만 동기적으로 수행이 완료될 경우도 있으니
 					// 리턴값을 확인하여 분기시켜야 합니다.
-					_pending = socket.AcceptAsync(this.argsAccept);
+					_pending = acceptSocket.AcceptAsync(this.acceptArgs);
 				}
 				catch (Exception _e)
 				{
@@ -95,7 +95,7 @@ namespace FreeNet
 				// http://msdn.microsoft.com/ko-kr/library/system.net.sockets.socket.acceptasync%28v=vs.110%29.aspx
 				if (!_pending)
 				{
-					OnAcceptAsync(null, this.argsAccept);
+					OnAcceptAsync(null, this.acceptArgs);
 				}
 
 				Console.WriteLine(" > AcceptTcpClient > Wait...");
@@ -114,17 +114,17 @@ namespace FreeNet
         /// AcceptAsync의 콜백 매소드
         /// </summary>
         /// <param name="_sender"></param>
-        /// <param name="_args">AcceptAsync 매소드 호출시 사용된 EventArgs</param>
-		void OnAcceptAsync(object _sender, SocketAsyncEventArgs _args)
+        /// <param name="_accepArgs">AcceptAsync 매소드 호출시 사용된 EventArgs</param>
+		void OnAcceptAsync(object _sender, SocketAsyncEventArgs _accepArgs)
 		{
-			Console.WriteLine(this + " OnAcceptAsync (신규유저접속시도)\r\n -> _sender:{0}\r\n -> _args:{1}", _sender, _args);
-			if (_args.SocketError == SocketError.Success)
+			Console.WriteLine(this + " OnAcceptAsync (신규유저접속시도)\r\n -> _sender:{0}\r\n -> _accepArgs:{1}", _sender, _accepArgs);
+			if (_accepArgs.SocketError == SocketError.Success)
             {
 				Console.WriteLine("  -> NewClient Success");
 				// 접속에 따른 OS가 받아온 Socket를 SocketAsynEvnetArgs에 실어서 보내줌.
 				// 새로 생긴 소켓을 보관해 놓은뒤~
-                Socket _socket		= _args.AcceptSocket;
-				CUserToken _token	= _args.UserToken as CUserToken;
+                Socket _socket		= _accepArgs.AcceptSocket;
+				CUserToken _token	= _accepArgs.UserToken as CUserToken;
 
                 // 다음 연결을 받아들인다.
                 this.autoResetEvent.Set();

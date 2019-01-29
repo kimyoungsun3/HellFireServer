@@ -129,7 +129,7 @@ namespace FreeNet
 				CPacket _packet = this.sendingQueue.Peek();
 
 				// 헤더에 패킷 사이즈를 기록한다.
-				_packet.record_size();
+				_packet.WriteSize();
 
 				// 이번에 보낼 패킷 사이즈 만큼 버퍼 크기를 설정하고
 				this.argsSend.SetBuffer(this.argsSend.Offset, _packet.position);
@@ -238,9 +238,9 @@ namespace FreeNet
 			Console.WriteLine(this + " StartKeepAlive");
 			System.Threading.Timer keepalive = new System.Threading.Timer((object e) =>
 			{
-				CPacket msg = CPacket.Create(0);
-				msg.push(0);
-				Send(msg);
+				CPacket _packet = CPacket.Create(0);
+				_packet.WriteInt(0);
+				Send(_packet);
 			}, null, 0, 3000);
 		}
 	}

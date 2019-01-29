@@ -14,15 +14,20 @@ namespace FreeNet
 		public byte[] buffer	{ get; private set; }
 		public int position		{ get; private set; }
 		public Int16 code		{ get; private set; }
+		public CPacket()
+		{
+			this.buffer = new byte[1024];
+		}
 
-		//--------------------------------
+		//--------------------------------------------
 		//
-		//--------------------------------
+		//--------------------------------------------
 		public static CPacket Create(Int16 _code)
 		{
+			
 			//CPacket packet = new CPacket();
 			CPacket _packet = CPacketBufferManager.Pop();
-			_packet.SetCode(_code);
+			_packet.WriteCode(_code);
 			return _packet;
 		}
 
@@ -41,19 +46,15 @@ namespace FreeNet
 		}
 
 		
-		public CPacket()
-		{
-			this.buffer = new byte[1024];
-		}
 
 		public Int16 pop_protocol_id()
 		{
-			return ReadCode();
+			return ReadShort();
 		}
 
 		public void copy_to(CPacket target)
 		{
-			target.SetCode(this.code);
+			target.WriteCode(this.code);
 			target.overwrite(this.buffer, this.position);
 		}
 
@@ -68,50 +69,56 @@ namespace FreeNet
             this.position += 1;
         }
 
-		public byte pop_byte()
+		//-----------------------------------------
+		//
+		//-----------------------------------------
+		public byte ReadByte()
 		{
-			byte _data = (byte)BitConverter.ToInt16(this.buffer, this.position);
-			this.position += sizeof(byte);
+			byte _data		= (byte)BitConverter.ToInt16(this.buffer, this.position);
+			this.position	+= sizeof(byte);
 			return _data;
 		}
 
-		public Int16 ReadCode()
+		public Int16 ReadShort()
 		{
 			Int16 _data		= BitConverter.ToInt16(this.buffer, this.position);
 			this.position	+= sizeof(Int16);
 			return _data;
 		}
 
-		public Int32 pop_int32()
+		public Int32 ReadInt()
 		{
-			Int32 _data = BitConverter.ToInt32(this.buffer, this.position);
-			this.position += sizeof(Int32);
+			Int32 _data		= BitConverter.ToInt32(this.buffer, this.position);
+			this.position	+= sizeof(Int32);
 			return _data;
 		}
 
-        public Single pop_Single()
+		//Single - float
+        public Single ReadFloat()
         {
-            Single _str = BitConverter.ToSingle(this.buffer, this.position);
-            this.position += sizeof(Single);
+            Single _str		= BitConverter.ToSingle(this.buffer, this.position);
+            this.position	+= sizeof(Single);
             return _str;
         }
 
-		public string pop_string()
+		public string ReadString()
 		{
 			// 문자열 길이는 최대 2바이트 까지. 0 ~ 32767
-			Int16 _len = BitConverter.ToInt16(this.buffer, this.position);
-			this.position += sizeof(Int16);
+			Int16 _len		= BitConverter.ToInt16(this.buffer, this.position);
+			this.position	+= sizeof(Int16);
 
 			// 인코딩은 utf8로 통일한다.
-			string _str = System.Text.Encoding.UTF8.GetString(this.buffer, this.position, _len);
-			this.position += _len;
+			string _str		= System.Text.Encoding.UTF8.GetString(this.buffer, this.position, _len);
+			this.position	+= _len;
 
 			return _str;
 		}
 
 
-
-		public void SetCode(Int16 _code)
+		//-----------------------------------------
+		//
+		//-----------------------------------------
+		public void WriteCode(Int16 _code)
 		{
 			this.code = _code;
 			//this.buffer = new byte[1024];
@@ -119,57 +126,56 @@ namespace FreeNet
 			// 헤더는 나중에 넣을것이므로 데이터 부터 넣을 수 있도록 위치를 점프시켜놓는다.
 			this.position = Defines.HEADERSIZE;
 
-			push_int16(_code);
+			WriteShort(_code);
 		}
 
-		public void record_size()
+		public void WriteSize()
 		{
 			Int16 _bodySize = (Int16)(this.position - Defines.HEADERSIZE);
 			byte[] _header = BitConverter.GetBytes(_bodySize);
 			_header.CopyTo(this.buffer, 0);
 		}
 
-		public void push_int16(Int16 data)
+		public void WriteByte(byte _data)
 		{
-			byte[] _tmpBuffer = BitConverter.GetBytes(data);
-			_tmpBuffer.CopyTo(this.buffer, this.position);
-			this.position += _tmpBuffer.Length;
-		}
-
-		public void push(byte data)
-		{
-			byte[] _tmpBuffer = BitConverter.GetBytes(data);
+			byte[] _tmpBuffer = BitConverter.GetBytes(_data);
 			_tmpBuffer.CopyTo(this.buffer, this.position);
 			this.position += sizeof(byte);
 		}
 
-		public void push(Int16 data)
+		public void WriteShort(Int16 _data)
 		{
-			byte[] _tmpBuffer = BitConverter.GetBytes(data);
+			byte[] _tmpBuffer = BitConverter.GetBytes(_data);
 			_tmpBuffer.CopyTo(this.buffer, this.position);
 			this.position += _tmpBuffer.Length;
 		}
 
-		public void push(Int32 data)
+		//public void push(Int16 _data)
+		//{
+		//	byte[] _tmpBuffer = BitConverter.GetBytes(_data);
+		//	_tmpBuffer.CopyTo(this.buffer, this.position);
+		//	this.position += _tmpBuffer.Length;
+		//}
+
+		public void WriteInt(Int32 _data)
 		{
-			byte[] _tmpBuffer = BitConverter.GetBytes(data);
+			byte[] _tmpBuffer = BitConverter.GetBytes(_data);
 			_tmpBuffer.CopyTo(this.buffer, this.position);
 			this.position += _tmpBuffer.Length;
 		}
 
-        public void push(Single data)
+        public void WriteFloat(Single data)
         {
             byte[] _tmpBuffer = BitConverter.GetBytes(data);
             _tmpBuffer.CopyTo(this.buffer, this.position);
             this.position += _tmpBuffer.Length;
         }
 
-
-		public void push(string data)
+		public void WriteString(string _data)
 		{
-			byte[] _tmpBuffer = Encoding.UTF8.GetBytes(data);
-
+			byte[] _tmpBuffer = Encoding.UTF8.GetBytes(_data);
 			Int16 len = (Int16)_tmpBuffer.Length;
+
 			byte[] len_buffer = BitConverter.GetBytes(len);
 			len_buffer.CopyTo(this.buffer, this.position);
 			this.position += sizeof(Int16);

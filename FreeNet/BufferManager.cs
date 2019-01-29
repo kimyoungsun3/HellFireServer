@@ -15,18 +15,18 @@ namespace FreeNet
     internal class BufferManager
     {
 
-        int m_numBytes;                 // the total number of bytes controlled by the buffer pool
-        byte[] m_buffer;                // the underlying byte array maintained by the Buffer Manager
-        Stack<int> m_freeIndexPool;     // 
-        int m_currentIndex;
-        int m_bufferSize;
+        int bufferTotalSize;                 // the total number of bytes controlled by the buffer pool
+        Stack<int> freeIndexPool;     // 
+		byte[] buffer;                // the underlying byte array maintained by the Buffer Manager
+		int bufferOffset;
+        int bufferSize;
 
-        public BufferManager(int totalBytes, int bufferSize)
+        public BufferManager(int _bufferTotalSize, int _bufferSize)
         {
-            m_numBytes		= totalBytes;
-            m_currentIndex	= 0;
-            m_bufferSize	= bufferSize;
-            m_freeIndexPool = new Stack<int>();
+            bufferTotalSize	= _bufferTotalSize;
+            bufferOffset	= 0;
+            this.bufferSize	= _bufferSize;
+            freeIndexPool	= new Stack<int>();
         }
 
         /// <summary>
@@ -35,27 +35,27 @@ namespace FreeNet
         public void InitBuffer()
         {
             // create one big large buffer and divide that out to each SocketAsyncEventArg object
-            m_buffer = new byte[m_numBytes];
+            buffer = new byte[bufferTotalSize];
         }
 
         /// <summary>
         /// Assigns a buffer from the buffer pool to the specified SocketAsyncEventArgs object
         /// </summary>
         /// <returns>true if the buffer was successfully set, else false</returns>
-        public bool SetBuffer(SocketAsyncEventArgs args)
+        public bool SetBuffer(SocketAsyncEventArgs _args)
         {
-            if (m_freeIndexPool.Count > 0)
+            if (freeIndexPool.Count > 0)
             {
-                args.SetBuffer(m_buffer, m_freeIndexPool.Pop(), m_bufferSize);
+                _args.SetBuffer(buffer, freeIndexPool.Pop(), bufferSize);
             }
             else
             {
-                if ((m_numBytes - m_bufferSize) < m_currentIndex)
+                if ((bufferTotalSize - bufferSize) < bufferOffset)
                 {
                     return false;
                 }
-                args.SetBuffer(m_buffer, m_currentIndex, m_bufferSize);
-                m_currentIndex += m_bufferSize;
+                _args.SetBuffer(buffer, bufferOffset, bufferSize);
+                bufferOffset += bufferSize;
             }
             return true;
         }
@@ -66,7 +66,7 @@ namespace FreeNet
         /// </summary>
         public void FreeBuffer(SocketAsyncEventArgs args)
         {
-            m_freeIndexPool.Push(args.Offset);
+            freeIndexPool.Push(args.Offset);
             args.SetBuffer(null, 0, 0);
         }
     }
