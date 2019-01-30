@@ -49,7 +49,9 @@ namespace CSampleServer
 		//void IPeer.ParseCode(Const<byte[]> _buffer)
 		public void ParseCode(Const<byte[]> _buffer)
 		{
-			Console.WriteLine(this + " ParseCode buffer:{0}", _buffer);
+			Console.WriteLine("======================================");
+			Console.WriteLine(this + " 패킷 들어옴... 파싱하기. ParseCode");
+			Console.WriteLine("======================================");
 			// ex)
 			CPacket _packet		= new CPacket(_buffer.Value, this);
             LOGIN_PROTO _code	= (LOGIN_PROTO)_packet.pop_protocol_id();
@@ -64,15 +66,20 @@ namespace CSampleServer
                         {
                             bRoomMaster = true; //방장이여
 
-                            string _str = _packet.ReadString();
-                            Console.WriteLine(" > {0} > CreateRoom", _str);
-                            Program.RoomCreate(this, _str);
-                            CPacket _response = CPacket.Create((short)LOGIN_PROTO.CREATE_ROOM_OK);
+                            string _strRoomName = _packet.ReadString();
+                            Program.RoomCreate(this, _strRoomName);
+							Console.WriteLine(" > _strRoomName:{0}", _strRoomName);
+
+							Console.WriteLine("[C <- S] CREATE_ROOM_OK");
+							CPacket _response = CPacket.Create((short)LOGIN_PROTO.CREATE_ROOM_OK);
                             _response.WriteInt(m_SN);
-                            SendCode(_response); //잘만들었으
+                            SendCode(_response);
                         }
-                        else
-                            SendCode(CPacket.Create((short)LOGIN_PROTO.CREATE_ROOM_FAILED)); //이미 접속한 방이있어
+						else
+						{
+							Console.WriteLine("[C <- S] CREATE_ROOM_FAILED");
+							SendCode(CPacket.Create((short)LOGIN_PROTO.CREATE_ROOM_FAILED)); //이미 접속한 방이있어
+						}
                     }
                     break;
                 case LOGIN_PROTO.ROOM_LIST_REQ:
@@ -80,9 +87,11 @@ namespace CSampleServer
 						Console.WriteLine("[C -> S] ROOM_LIST_REQ");
 
 						CPacket _response = CPacket.Create((short)LOGIN_PROTO.ROOM_LIST_ACK);
-                        int count = Program.listRoom.Count;
-                        _response.WriteInt(count);
-                        for (int i = 0; i < count; i++) // Loop with for.
+                        int _countRoom = Program.listRoom.Count;
+						_response.WriteInt(_countRoom);
+
+						Console.WriteLine(" > 방수량:{0}", _countRoom);
+						for (int i = 0; i < _countRoom; i++) // Loop with for.
                         {
                             if (Program.listRoom[i] != null)
                             {
@@ -90,8 +99,9 @@ namespace CSampleServer
 								_response.WriteInt(Program.listRoom[i].playerCount);
 								_response.WriteInt(Program.listRoom[i].playerMax);
 							}
-                        }
-                        SendCode(_response);
+						}
+						Console.WriteLine("[C <- S] ROOM_LIST_ACK");
+						SendCode(_response);
                     }
                     break;
 
@@ -106,11 +116,11 @@ namespace CSampleServer
                 case LOGIN_PROTO.ROOM_CONNECT_REQ:
 					{
 						Console.WriteLine("[C -> S] ROOM_CONNECT_REQ");
-						int roomnum = _packet.ReadInt();
+						int _roomNum = _packet.ReadInt();
 
-                        if(Program.RoomConnect(this, roomnum))
+                        if(Program.RoomConnect(this, _roomNum))
                         {
-                                                            //성공
+                            //성공
                             CPacket _response = CPacket.Create((short)LOGIN_PROTO.ROOM_CONNECT_OK);
 
                             _response.WriteInt(myRoom.listGameUser.Count);
@@ -118,17 +128,20 @@ namespace CSampleServer
                             for (int i = 0; i < myRoom.listGameUser.Count; ++i )
                             {
                                 _response.WriteInt(myRoom.listGameUser[i].m_SN);
-                            }
-                            SendCode(_response); //잘만들었으
+							}
+							Console.WriteLine("[C <- S] ROOM_CONNECT_OK");
+							SendCode(_response); //잘만들었으
 
                             CPacket _response2 = CPacket.Create((short)LOGIN_PROTO.ROOM_CONNECT_OTHER);
                             _response2.WriteInt(m_SN);
-                            myRoom.BroadCast(_response2, this);
+							Console.WriteLine("[C <- S] ROOM_CONNECT_OTHER");
+							myRoom.BroadCast(_response2, this);
                         }
                         else
                         {
-                            //실패
-                            SendCode(CPacket.Create((short)LOGIN_PROTO.ROOM_CONNECT_FAILED));
+							//실패
+							Console.WriteLine("[C <- S] ROOM_CONNECT_FAILED");
+							SendCode(CPacket.Create((short)LOGIN_PROTO.ROOM_CONNECT_FAILED));
                         }
                     }
                     break;
@@ -137,13 +150,14 @@ namespace CSampleServer
 						Console.WriteLine("[C -> S] CHAT_MSG_REQ");
 						if (myRoom != null)
                         {
-                            string text = _packet.ReadString();
-                            Console.WriteLine(string.Format("text {0}", text));
+                            string _strMsg = _packet.ReadString();
+                            Console.WriteLine(" > _strMsg:{0}", _strMsg);
 
                             CPacket _response = CPacket.Create((short)LOGIN_PROTO.CHAT_MSG_REQ);
                             _response.WriteInt(m_SN);
-                            _response.WriteString(text);
-                            myRoom.BroadCast(_response, this);
+                            _response.WriteString(_strMsg);
+							Console.WriteLine("[C <- S] CHAT_MSG_REQ");
+							myRoom.BroadCast(_response, this);
                         }
                         //BroadCast(response);
                     }
@@ -153,22 +167,23 @@ namespace CSampleServer
 						Console.WriteLine("[C -> S] LOGIN_REQUEST");
 						//msg.pop_string();
 
-
-						UserInfo NewUser = new UserInfo();
-						NewUser.Name = _packet.ReadString();
-						NewUser.SN = m_SN;
-						listUserInfo.Add(NewUser);
-						Console.WriteLine("Connect" + NewUser.Name);
+						UserInfo _userInfo = new UserInfo();
+						_userInfo.Name = _packet.ReadString();
+						_userInfo.SN = m_SN;
+						listUserInfo.Add(_userInfo);
+						//Console.WriteLine(" Connect" + _userInfo.Name);
 
 						CPacket _response1 = CPacket.Create((short)LOGIN_PROTO.LOGIN_REPLY);
 						_response1.WriteInt(m_SN);
-						_response1.WriteString(NewUser.Name);
+						_response1.WriteString(_userInfo.Name);
+						Console.WriteLine("[C <- S] LOGIN_REPLY");
 						BroadCast(_response1);
 
 
 						CPacket _response = CPacket.Create((short)LOGIN_PROTO.USER_CONNECT);
 						_response.WriteInt(m_SN);
-						_response.WriteString(NewUser.Name);
+						_response.WriteString(_userInfo.Name);
+						Console.WriteLine("[C <- S] USER_CONNECT");
 						SendCode(_response);
 
 						for (int i = 0; i < listUserInfo.Count; i++) // Loop with for.
@@ -178,6 +193,7 @@ namespace CSampleServer
 								CPacket _response3 = CPacket.Create((short)LOGIN_PROTO.LOGIN_REPLY);
 								_response3.WriteInt(listUserInfo[i].SN);
 								_response3.WriteString(listUserInfo[i].Name);
+								Console.WriteLine("[C <- S] LOGIN_REPLY");
 								SendCode(_response3);
 							}
 						}
@@ -193,8 +209,9 @@ namespace CSampleServer
 						float x = _packet.ReadFloat();
 						float y = _packet.ReadFloat();
 						float z = _packet.ReadFloat();
+						Console.WriteLine(" > SN:{0} x:{1} y:{2}, z:{3}", SN, x, y, z);
+						Console.WriteLine("[C <- S] MOVING_USER_REQ");
 						BroadCast(_packet);
-						Console.WriteLine(x + ":" + y + ":" + z);
 					}
 					break;
                 case LOGIN_PROTO.ATTACK:
@@ -206,6 +223,8 @@ namespace CSampleServer
 						float y = _packet.ReadFloat();
 						float z = _packet.ReadFloat();
 						float w = _packet.ReadFloat();
+						Console.WriteLine(" > SN:{0} Type:{1} x:{2}, y:{3}, z:{4}, w:{5}", SN, Type, x, y, z, w);
+						Console.WriteLine("[C <- S] ATTACK");
 						BroadCast(_packet);
 					}
 					break;

@@ -24,10 +24,10 @@ namespace FreeNet
 		//--------------------------------------------
 		public static CPacket Create(Int16 _code)
 		{
-			
 			//CPacket packet = new CPacket();
 			CPacket _packet = CPacketBufferManager.Pop();
 			_packet.WriteCode(_code);
+			Console.WriteLine(" > 풀링된 CPacket 남은수량:{1}", _code, CPacketBufferManager.GetCount());
 			return _packet;
 		}
 

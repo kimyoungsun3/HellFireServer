@@ -12,6 +12,7 @@ namespace CSampleServer
 	{
         public static List<CRoom> listRoom;
 		public static List<CGameUser> userlist;
+		public static int roomIdentity = 1;
 
 		static void Main(string[] args)
 		{
@@ -122,8 +123,10 @@ namespace CSampleServer
 				//1 or 2제거된후에....
 				//받아오면~~~~~ 2
 				//2 2 번이된다 오류임....~~~
-                _room.number = listRoom.Count();
-            }
+				//_room.number = listRoom.Count();
+				_room.number = roomIdentity;
+				roomIdentity++;
+			}
         }
 
         public static void RoomRemove(CRoom _room)

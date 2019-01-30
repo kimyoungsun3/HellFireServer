@@ -11,6 +11,7 @@ namespace FreeNet
 		static Stack<CPacket> pool;
 		static int poolCapacity;
 
+		public static int GetCount() { return pool.Count; }
 		public static void Initialize(int _capacity)
 		{
 			Console.WriteLine("CPacketBufferManager Initialize capacity:" + _capacity);
@@ -36,7 +37,6 @@ namespace FreeNet
 					Console.WriteLine("reallocate.");
 					Allocate();
 				}
-
 				return pool.Pop();
 			}
 		}

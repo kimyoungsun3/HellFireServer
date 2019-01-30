@@ -83,6 +83,9 @@ namespace FreeNet
 					// 비동기 매소드 이지만 동기적으로 수행이 완료될 경우도 있으니
 					// 리턴값을 확인하여 분기시켜야 합니다.
 					_pending = acceptSocket.AcceptAsync(this.acceptArgs);
+
+					//대기중에 다시 대기를 걸면 오류가 발생한다...
+					//_pending = acceptSocket.AcceptAsync(this.acceptArgs);
 				}
 				catch (Exception _e)
 				{
