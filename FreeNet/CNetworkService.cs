@@ -64,7 +64,7 @@ namespace FreeNet
 				{
 					//Pre-allocate a set of reusable SocketAsyncEventArgs
 					_arg			= new SocketAsyncEventArgs();
-					_arg.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceiveAsync);
+					_arg.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceiveCallback);
 					_arg.UserToken	= _token;
 
 					// assign a byte buffer from the buffer pool to the SocketAsyncEventArg object
@@ -78,7 +78,7 @@ namespace FreeNet
 				{
 					//Pre-allocate a set of reusable SocketAsyncEventArgs
 					_arg			= new SocketAsyncEventArgs();
-					_arg.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendAsync);
+					_arg.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCallback);
 					_arg.UserToken	= _token;
 
 					// assign a byte buffer from the buffer pool to the SocketAsyncEventArg object
@@ -154,12 +154,12 @@ namespace FreeNet
 			// 서버간 연결에서도 마찬가지이다.
 			// 풀링처리를 하려면 c->s로 가는 별도의 풀을 만들어서 써야 한다.
 			SocketAsyncEventArgs _receiveArgs = new SocketAsyncEventArgs();
-			_receiveArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceiveAsync);
+			_receiveArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceiveCallback);
 			_receiveArgs.UserToken = _token;
 			_receiveArgs.SetBuffer(new byte[1024], 0, 1024);
 
 			SocketAsyncEventArgs _sendArg = new SocketAsyncEventArgs();
-			_sendArg.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendAsync);
+			_sendArg.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCallback);
 			_sendArg.UserToken = _token;
 			_sendArg.SetBuffer(new byte[1024], 0, 1024);
 
@@ -189,12 +189,12 @@ namespace FreeNet
 		// This method is called whenever a receive or send operation is completed on a socket 
 		//
 		// <param name="e">SocketAsyncEventArg associated with the completed receive operation</param>
-		void OnReceiveAsync(object _sender, SocketAsyncEventArgs _argsReceive)
+		void OnReceiveCallback(object _sender, SocketAsyncEventArgs _receiveArgs)
 		{
-			Console.WriteLine(this + " OnReceiveAsync(유저패킷 비동기 콜백들어옴) \r\n _sender:{0},\r\n _e{1}", _sender, _argsReceive);
-			if (_argsReceive.LastOperation == SocketAsyncOperation.Receive)
+			Console.WriteLine(this + " OnReceiveCallback(유저패킷 비동기 콜백들어옴) \r\n _sender:{0},\r\n _receiveArgs{1}", _sender, _receiveArgs);
+			if (_receiveArgs.LastOperation == SocketAsyncOperation.Receive)
 			{
-				ReceiveProcess(_argsReceive);
+				ReceiveProcess(_receiveArgs);
 				return;
 			}
 
@@ -233,9 +233,9 @@ namespace FreeNet
 		// This method is called whenever a receive or send operation is completed on a socket 
 		//
 		// <param name="e">SocketAsyncEventArg associated with the completed send operation</param>
-		void OnSendAsync(object _sender, SocketAsyncEventArgs _argsSend)
+		void OnSendCallback(object _sender, SocketAsyncEventArgs _argsSend)
 		{
-			Console.WriteLine(this + " OnSendAsync(유저에게 보냄)\r\n _sender:{0}\r\n _argsSend:{1}", _sender, _argsSend);
+			Console.WriteLine(this + " OnSendCallback(유저에게 보냄)\r\n _sender:{0}\r\n _argsSend:{1}", _sender, _argsSend);
 			CUserToken _token = _argsSend.UserToken as CUserToken;
 			_token.SendProcess(_argsSend);
 		}

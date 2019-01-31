@@ -49,7 +49,7 @@ namespace FreeNet
 				acceptSocket.Listen(_backlog);
 
 				this.acceptArgs				= new SocketAsyncEventArgs();
-				this.acceptArgs.Completed	+= new EventHandler<SocketAsyncEventArgs>(OnAcceptAsync);
+				this.acceptArgs.Completed	+= new EventHandler<SocketAsyncEventArgs>(OnAcceptCallback);
 				
 
 				Thread _thread = new Thread(AcceptTcpClient);
@@ -98,7 +98,7 @@ namespace FreeNet
 				// http://msdn.microsoft.com/ko-kr/library/system.net.sockets.socket.acceptasync%28v=vs.110%29.aspx
 				if (!_pending)
 				{
-					OnAcceptAsync(null, this.acceptArgs);
+					OnAcceptCallback(null, this.acceptArgs);
 				}
 
 				Console.WriteLine(" > AcceptTcpClient > Wait...");
@@ -118,7 +118,7 @@ namespace FreeNet
         /// </summary>
         /// <param name="_sender"></param>
         /// <param name="_acceptArgs">AcceptAsync 매소드 호출시 사용된 EventArgs</param>
-		void OnAcceptAsync(object _sender, SocketAsyncEventArgs _acceptArgs)
+		void OnAcceptCallback(object _sender, SocketAsyncEventArgs _acceptArgs)
 		{
 			Console.WriteLine(this + " OnAcceptAsync (신규유저접속시도)\r\n -> _sender:{0}\r\n -> _acceptArgs:{1}", _sender, _acceptArgs);
 			if (_acceptArgs.SocketError == SocketError.Success)
