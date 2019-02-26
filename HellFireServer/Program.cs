@@ -11,22 +11,20 @@ namespace CSampleServer
 	class Program
 	{
         public static List<CRoom> listRoom;
-		public static List<CGameUser> userlist;
+		public static List<CGameUser> listGameUser;
 		public static int roomIdentity = 1;
 
 		static void Main(string[] args)
 		{
 			Console.WriteLine("Program Main");
 			CPacketBufferManager.Initialize(2000);
-			userlist = new List<CGameUser>();
-            listRoom = new List<CRoom>();
+			listGameUser	= new List<CGameUser>();
+            listRoom		= new List<CRoom>();
 
-            CNetworkService service = new CNetworkService();
-			// 콜백 매소드 설정.
-			service.onSessionCreated += OnSessionCreated;
-			// 초기화.
-			service.Initialize();
-            service.Listen("0.0.0.0", 49494, 100);
+            CNetworkService service = new CNetworkService();			
+			service.onSessionCreated += OnSessionCreated;   // 콜백 매소드 설정.															
+			service.Initialize();                           // 초기화.
+			service.Listen("0.0.0.0", 49494, 100);
 
 
 			Console.WriteLine("Started!");
@@ -48,9 +46,9 @@ namespace CSampleServer
 		static void OnSessionCreated(CUserToken _token)
 		{
 			CGameUser _user = new CGameUser(_token);
-			lock (userlist)
+			lock (listGameUser)
 			{
-				userlist.Add(_user);
+				listGameUser.Add(_user);
 			}
 		}
 
@@ -60,9 +58,9 @@ namespace CSampleServer
             {
                 ExitUserRoom(user);
             }
-            lock (userlist)
+            lock (listGameUser)
 			{
-				userlist.Remove(user);
+				listGameUser.Remove(user);
 			}
 		}
         static void ExitUserRoom(CGameUser _user)

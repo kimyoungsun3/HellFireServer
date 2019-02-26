@@ -42,7 +42,7 @@ namespace FreeNet
 			this.maxConnections = 10000;
 			this.bufferSize = 1024;
 
-			this.bufferManager			= new BufferManager(this.maxConnections * this.bufferSize * this.pre_alloc_count, this.bufferSize);
+			this.bufferManager		= new BufferManager(this.maxConnections * this.bufferSize * this.pre_alloc_count, this.bufferSize);
 			this.receiveArgsPool	= new SocketAsyncEventArgsPool(this.maxConnections);
 			this.sendArgsPool		= new SocketAsyncEventArgsPool(this.maxConnections);
 
