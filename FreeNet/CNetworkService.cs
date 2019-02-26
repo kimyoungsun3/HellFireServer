@@ -102,10 +102,10 @@ namespace FreeNet
 		/// 새로운 클라이언트가 접속 성공 했을 때 호출됩니다.
 		/// AcceptAsync의 콜백 매소드에서 호출되며 여러 스레드에서 동시에 호출될 수 있기 때문에 공유자원에 접근할 때는 주의해야 합니다.
 		/// </summary>
-		/// <param name="_newClientSocket"></param>
-		void OnAcceptProcess(Socket _newClientSocket, object _token)
+		/// <param name="_clientSocket"></param>
+		void OnAcceptProcess(Socket _clientSocket, object _token)
 		{
-			Console.WriteLine(this + " OnAcceptProcess(신규유저가 접속됨(콜백받음))\r\n > _newClientSocket:{0}\r\n > token:{1}", _newClientSocket, _token);
+			Console.WriteLine(this + " OnAcceptProcess(신규유저가 접속됨(콜백받음))\r\n > _newClientSocket:{0}\r\n > token:{1}", _clientSocket, _token);
 			//todo:
 			// peer list처리.
 
@@ -120,7 +120,7 @@ namespace FreeNet
 			Console.WriteLine("  > connectedCount:{0} ThreadID:{1} _newClientSocket.Handle:{2}",
 				this.connectedCount, 
 				Thread.CurrentThread.ManagedThreadId, 
-				_newClientSocket.Handle);
+				_clientSocket.Handle);
 
 			// 플에서 하나 꺼내와 사용한다.
 			SocketAsyncEventArgs _argsReceive	= this.receiveArgsPool.Pop();
@@ -136,7 +136,7 @@ namespace FreeNet
 			}
 
 			Console.WriteLine("  > 연결 : UserTokent(_newClientSocket, _argsReceive, _argsSend)");
-			ReceiveWaitBegin(_newClientSocket, _argsReceive, _argsSend);
+			ReceiveWaitBegin(_clientSocket, _argsReceive, _argsSend);
 			//user_token.start_keepalive();
 		}
 

@@ -9,18 +9,14 @@ using System.Threading;
 namespace FreeNet
 {
 	class CListener
-	{
-        // 비동기 Accept를 위한 EventArgs.
-		SocketAsyncEventArgs acceptArgs;
+	{        
+		SocketAsyncEventArgs acceptArgs;// 비동기 Accept를 위한 EventArgs.
+		Socket acceptSocket;        
+		AutoResetEvent autoResetEvent;  // Accept처리의 순서를 제어하기 위한 이벤트 변수.
 
-		Socket acceptSocket;
-
-        // Accept처리의 순서를 제어하기 위한 이벤트 변수.
-		AutoResetEvent autoResetEvent;
-
-        // 새로운 클라이언트가 접속했을 때 호출되는 콜백.
-		public delegate void NewclientHandler(Socket _socket, object _token);
-		public NewclientHandler onAcceptNewClient;
+		// 새로운 클라이언트가 접속했을 때 호출되는 콜백.
+		public delegate void VOID_FUN_SOCKET_OBJECT(Socket _socket, object _token);
+		public VOID_FUN_SOCKET_OBJECT onAcceptNewClient;
 
         public CListener()
 		{
@@ -51,7 +47,6 @@ namespace FreeNet
 				this.acceptArgs				= new SocketAsyncEventArgs();
 				this.acceptArgs.Completed	+= new EventHandler<SocketAsyncEventArgs>(OnAcceptCallback);
 				
-
 				Thread _thread = new Thread(AcceptTcpClient);
 				_thread.Start();
 			}
@@ -126,7 +121,7 @@ namespace FreeNet
 				Console.WriteLine("  -> NewClient Success");
 				// 접속에 따른 OS가 받아온 Socket를 SocketAsynEvnetArgs에 실어서 보내줌.
 				// 새로 생긴 소켓을 보관해 놓은뒤~
-                Socket _socket		= _acceptArgs.AcceptSocket;
+                Socket _clientSocket= _acceptArgs.AcceptSocket;
 				CUserToken _token	= _acceptArgs.UserToken as CUserToken;
 
                 // 다음 연결을 받아들인다.
@@ -140,7 +135,7 @@ namespace FreeNet
                 // 또한 클래스 설계 방침에 따라 Listen에 관련된 코드만 존재하도록 하기 위한 이유도 있습니다.
                 if (this.onAcceptNewClient != null)
                 {
-                    this.onAcceptNewClient(_socket, _token);
+                    this.onAcceptNewClient(_clientSocket, _token);
                 }
 
 				return;

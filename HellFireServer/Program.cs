@@ -34,7 +34,6 @@ namespace CSampleServer
 				System.Threading.Thread.Sleep(1000);
 			}
 			//Console.Write("Server End");
-
 			//Console.ReadKey();
 		}
 
