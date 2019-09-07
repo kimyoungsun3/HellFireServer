@@ -52,9 +52,9 @@ namespace CSampleServer
 			Console.WriteLine("======================================");
 			Console.WriteLine(this + " 패킷 들어옴... 파싱하기. ParseCode");
 			Console.WriteLine("======================================");
-			// ex)
-			CPacket _packet		= new CPacket(_buffer.Value, this);
-            LOGIN_PROTO _code	= (LOGIN_PROTO)_packet.pop_protocol_id();
+			//_packet은 함수 안에서만 유효한것임... 다른데에서는 사용안함...
+			CPacket _receive	= new CPacket(_buffer.Value, this);
+            LOGIN_PROTO _code	= (LOGIN_PROTO)_receive.pop_protocol_id();
 			Console.WriteLine(" > _code:" + _code);
 
 			switch (_code)
@@ -66,7 +66,7 @@ namespace CSampleServer
                         {
                             bRoomMaster = true; //방장이여
 
-                            string _strRoomName = _packet.ReadString();
+                            string _strRoomName = _receive.ReadString();
                             Program.RoomCreate(this, _strRoomName);
 							Console.WriteLine(" > _strRoomName:{0}", _strRoomName);
 
@@ -116,7 +116,7 @@ namespace CSampleServer
                 case LOGIN_PROTO.ROOM_CONNECT_REQ:
 					{
 						Console.WriteLine("[C -> S] ROOM_CONNECT_REQ");
-						int _roomNum = _packet.ReadInt();
+						int _roomNum = _receive.ReadInt();
 
                         if(Program.RoomConnect(this, _roomNum))
                         {
@@ -148,18 +148,25 @@ namespace CSampleServer
                 case LOGIN_PROTO.CHAT_MSG_REQ:
 					{
 						Console.WriteLine("[C -> S] CHAT_MSG_REQ");
+						string _strMsg = _receive.ReadString();
+						Console.WriteLine(" > _strMsg:{0}", _strMsg);
 						if (myRoom != null)
-                        {
-                            string _strMsg = _packet.ReadString();
-                            Console.WriteLine(" > _strMsg:{0}", _strMsg);
+                        {                           
 
                             CPacket _response = CPacket.Create((short)LOGIN_PROTO.CHAT_MSG_REQ);
                             _response.WriteInt(m_SN);
                             _response.WriteString(_strMsg);
 							Console.WriteLine("[C <- S] CHAT_MSG_REQ");
 							myRoom.BroadCast(_response, this);
-                        }
-                        //BroadCast(response);
+						}
+						else
+						{
+							CPacket _response = CPacket.Create((short)LOGIN_PROTO.CHAT_MSG_REQ);
+							_response.WriteInt(0);
+							_response.WriteString(_strMsg);
+							Console.WriteLine("[C <- S] CHAT_MSG_REQ");
+							SendCode(_response);
+						}
                     }
                     break;
                 case LOGIN_PROTO.LOGIN_REQUEST:
@@ -168,7 +175,7 @@ namespace CSampleServer
 						//msg.pop_string();
 
 						UserInfo _userInfo = new UserInfo();
-						_userInfo.Name = _packet.ReadString();
+						_userInfo.Name = _receive.ReadString();
 						_userInfo.SN = m_SN;
 						listUserInfo.Add(_userInfo);
 						//Console.WriteLine(" Connect" + _userInfo.Name);
@@ -201,31 +208,67 @@ namespace CSampleServer
 						++m_SN;
 					}
 					break;
-
                 case LOGIN_PROTO.MOVING_USER_REQ:
 					{
 						Console.WriteLine("[C -> S] MOVING_USER_REQ");
-						int SN = _packet.ReadInt();
-						float x = _packet.ReadFloat();
-						float y = _packet.ReadFloat();
-						float z = _packet.ReadFloat();
+						int SN = _receive.ReadInt();
+						float x = _receive.ReadFloat();
+						float y = _receive.ReadFloat();
+						float z = _receive.ReadFloat();
 						Console.WriteLine(" > SN:{0} x:{1} y:{2}, z:{3}", SN, x, y, z);
 						Console.WriteLine("[C <- S] MOVING_USER_REQ");
-						BroadCast(_packet);
+
+						BroadCast(_receive);
 					}
 					break;
-                case LOGIN_PROTO.ATTACK:
+				case LOGIN_PROTO.MOVING_USER_ONLY:
+					{
+						Console.WriteLine("[C -> S] MOVING_USER_ONLY");
+						int SN = _receive.ReadInt();
+						float x = _receive.ReadFloat();
+						float y = _receive.ReadFloat();
+						float z = _receive.ReadFloat();
+						Console.WriteLine(" > SN:{0} x:{1} y:{2}, z:{3}", SN, x, y, z);
+						Console.WriteLine("[C <- S] MOVING_USER_ONLY");
+
+
+						CPacket _response = CPacket.Create((short)LOGIN_PROTO.MOVING_USER_ONLY);
+						_response.WriteInt(SN);
+						_response.WriteFloat(x);
+						_response.WriteFloat(y);
+						_response.WriteFloat(z);
+						
+						List<CGameUser> _userList = Program.listGameUser;
+						foreach (CGameUser _client in _userList)
+						{
+							_client.token.SendCode(_response);
+						}
+					}
+					break;
+				case LOGIN_PROTO.ATTACK:
 					{
 						Console.WriteLine("[C -> S] ATTACK");
-						int SN = _packet.ReadInt();
-						byte Type = _packet.ReadByte();
-						float x = _packet.ReadFloat();
-						float y = _packet.ReadFloat();
-						float z = _packet.ReadFloat();
-						float w = _packet.ReadFloat();
+						int SN = _receive.ReadInt();
+						byte Type = _receive.ReadByte();
+						float x = _receive.ReadFloat();
+						float y = _receive.ReadFloat();
+						float z = _receive.ReadFloat();
+						float w = _receive.ReadFloat();
 						Console.WriteLine(" > SN:{0} Type:{1} x:{2}, y:{3}, z:{4}, w:{5}", SN, Type, x, y, z, w);
 						Console.WriteLine("[C <- S] ATTACK");
-						BroadCast(_packet);
+						BroadCast(_receive);
+					}
+					break;
+				case LOGIN_PROTO.PTC_ECHO:
+					{
+						Console.WriteLine("[C -> S] PTC_ECHO");
+						string _strMsg = _receive.ReadString();
+						Console.WriteLine(" > _strMsg:{0}", _strMsg);
+
+						CPacket _response = CPacket.Create((short)LOGIN_PROTO.PTS_ECHO);
+						_response.WriteString(_strMsg);
+						Console.WriteLine("[C <- S] PTS_ECHO");
+						SendCode(_response);
 					}
 					break;
 				default:
@@ -234,6 +277,9 @@ namespace CSampleServer
 					}
 					break;
 			}
+
+			//사용하고 남은 것은 해제해준다.
+			//CPacket.Destroy(_packet);
 		}
 
 		//void IPeer.OnRemoved()
@@ -253,11 +299,11 @@ namespace CSampleServer
 		{
 			Console.WriteLine(this + " BroadCast:{0}", _packet);
 			List<CGameUser> _userList = myRoom.listGameUser;
-           foreach (CGameUser _client in _userList)   
-           {
-               if (_client.token != this.token)
-                   _client.token.SendCode(_packet);
-           }
+			foreach (CGameUser _client in _userList)   
+			{
+				if (_client.token != this.token)
+					_client.token.SendCode(_packet);
+			}
            //this.token.send(msg);
         }
 

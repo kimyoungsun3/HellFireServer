@@ -24,8 +24,9 @@ namespace LoginProtocol
         ROOM_EXIT_OTHER,//다른 유저 방 나감
         
         MOVING_USER_REQ,//SN이랑 위치정보
+		MOVING_USER_ONLY,
 
-        HEART_SEND_REQ, //하트 전송, SN
+		HEART_SEND_REQ, //하트 전송, SN
 
         LOGIN_REQUEST,
         LOGIN_REPLY,
@@ -35,7 +36,9 @@ namespace LoginProtocol
         ATTACK,
         USER_CONNECT,
         CHAT_MSG_REQ,
+		PTC_ECHO,
+		PTS_ECHO,
 
-        END
+		END
     }
 }

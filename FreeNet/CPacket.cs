@@ -10,13 +10,16 @@ namespace FreeNet
 	/// </summary>
 	public class CPacket
 	{
+		public static int seqNum = 0;
+		public int num;
 		public IPeer owner		{ get; private set; }
 		public byte[] buffer	{ get; private set; }
 		public int position		{ get; private set; }
 		public Int16 code		{ get; private set; }
 		public CPacket()
 		{
-			this.buffer = new byte[1024];
+			num		= ++seqNum;
+			buffer	= new byte[1024];
 		}
 
 		//--------------------------------------------

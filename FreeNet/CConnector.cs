@@ -13,55 +13,67 @@ namespace FreeNet
 	/// </summary>
 	public class CConnector
 	{
-		public delegate void ConnectedHandler(CUserToken token);
-		public ConnectedHandler connected_callback { get; set; }
+		public delegate void VOID_FUN_TOKEN(CUserToken token);
+		public VOID_FUN_TOKEN onConnected { get; set; }
 
 		// 원격지 서버와의 연결을 위한 소켓.
 		Socket client;
-
 		CNetworkService networkService;
 
-		public CConnector(CNetworkService network_service)
+		public CConnector(CNetworkService _service)
 		{
-			this.networkService = network_service;
-			this.connected_callback = null;
+			networkService	= _service;
+			onConnected		= null;
 		}
 
-		public void connect(IPEndPoint remote_endpoint)
+		//public void connect(IPEndPoint remote_endpoint)
+		//{
+		//	this.client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);		
+		//	// 비동기 접속을 위한 event args.
+		//	SocketAsyncEventArgs event_arg = new SocketAsyncEventArgs();
+		//	event_arg.Completed			+= OnConnectAsync;
+		//	event_arg.RemoteEndPoint	= remote_endpoint;
+		//	bool pending = this.client.ConnectAsync(event_arg);
+		//	if (!pending)
+		//	{
+		//		OnConnectAsync(null, event_arg);
+		//	}
+		//}
+
+		public void Connect(IPEndPoint _ipEndPoint, AddressFamily _addressFamily = AddressFamily.InterNetwork)
 		{
-			this.client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-		
+			client = new Socket(_addressFamily, SocketType.Stream, ProtocolType.Tcp);
+
 			// 비동기 접속을 위한 event args.
-			SocketAsyncEventArgs event_arg = new SocketAsyncEventArgs();
-			event_arg.Completed += on_connect_completed;
-			event_arg.RemoteEndPoint = remote_endpoint;
-			bool pending = this.client.ConnectAsync(event_arg);
-			if (!pending)
+			SocketAsyncEventArgs _connectArgs	= new SocketAsyncEventArgs();
+			_connectArgs.Completed				+= OnConnectAsync;
+			_connectArgs.RemoteEndPoint			= _ipEndPoint;
+			bool _pending = client.ConnectAsync(_connectArgs);
+			if (!_pending)
 			{
-				on_connect_completed(null, event_arg);
+				OnConnectAsync(null, _connectArgs);
 			}
 		}
 
-		void on_connect_completed(object _sender, SocketAsyncEventArgs _e)
+		void OnConnectAsync(object _sender, SocketAsyncEventArgs _connectArgs)
 		{
-			Console.WriteLine(this + " on_connect_completed");
-			if (_e.SocketError == SocketError.Success)
+			Console.WriteLine(this + " OnConnectAsync");
+			if (_connectArgs.SocketError == SocketError.Success)
 			{
 				Console.WriteLine(" > Socket Connect Success > Connect completd!");
-				CUserToken token = new CUserToken();
+				CUserToken _token = new CUserToken();
 
 				// 데이터 수신 준비.
-				this.networkService.OnConnectCompleted(this.client, token);
-
-				if (this.connected_callback != null)
+				networkService.OnConnectCompleted(client, _token);
+				if (onConnected != null)
 				{
-					this.connected_callback(token);
+					onConnected(_token);
 				}
 			}
 			else
 			{
 				// failed.
-				Console.WriteLine(string.Format("Failed to connect. {0}", _e.SocketError));
+				Console.WriteLine(string.Format("Failed to connect. {0}", _connectArgs.SocketError));
 			}
 		}
 	}

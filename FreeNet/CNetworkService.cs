@@ -9,7 +9,7 @@ using System.Net.Sockets;
 namespace FreeNet
 {
     public class CNetworkService
-    {
+	{
 		int connectedCount;
 		CListener clientListener;
 		SocketAsyncEventArgsPool receiveArgsPool;
@@ -29,6 +29,18 @@ namespace FreeNet
 			Console.WriteLine(this + " Construtor");
 			this.connectedCount = 0;
 			this.onSessionCreated = null;
+
+			//동일한 레퍼런스를 가르키고 있다. 동일 버퍼라는 의미...
+			//byte[] _b			= new byte[4];
+			//Const<byte[]> _b2	= (new Const<byte[]>(_b));
+			//byte[] _b3			= _b2.Value;
+			//for(int i = 0; i < _b.Length; i++)
+			//{
+			//	_b3[i] = 3;
+			//	_b[i] = (byte)i;
+			//	_b2.Value[i] = 2;
+			//	Console.WriteLine("{0} -> {1} {2} {3}", i, _b[i], _b2.Value[i], _b3[i]);
+			//}
 		}
 
 		// Initializes the server by preallocating reusable buffers and 
@@ -154,35 +166,26 @@ namespace FreeNet
 			// 서버간 연결에서도 마찬가지이다.
 			// 풀링처리를 하려면 c->s로 가는 별도의 풀을 만들어서 써야 한다.
 			SocketAsyncEventArgs _receiveArgs = new SocketAsyncEventArgs();
-			_receiveArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceiveCallback);
-			_receiveArgs.UserToken = _token;
+			_receiveArgs.Completed			+= new EventHandler<SocketAsyncEventArgs>(OnReceiveCallback);
+			_receiveArgs.UserToken			= _token;
 			_receiveArgs.SetBuffer(new byte[1024], 0, 1024);
 
-			SocketAsyncEventArgs _sendArg = new SocketAsyncEventArgs();
-			_sendArg.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCallback);
-			_sendArg.UserToken = _token;
-			_sendArg.SetBuffer(new byte[1024], 0, 1024);
+			SocketAsyncEventArgs _sendArgs	= new SocketAsyncEventArgs();
+			_sendArgs.Completed				+= new EventHandler<SocketAsyncEventArgs>(OnSendCallback);
+			_sendArgs.UserToken				= _token;
+			_sendArgs.SetBuffer(new byte[1024], 0, 1024);
 
-			ReceiveWaitBegin(_socket, _receiveArgs, _sendArg);
-		}
-
-
-		void ReceiveWaitBegin(Socket _socket, SocketAsyncEventArgs _argsReceive, SocketAsyncEventArgs _argsSend)
-		{
-			Console.WriteLine(this + " *** ReceiveWaitBegin (각유저 패킷받기 시작) ***\r\n _socket:{0}\r\n _argsReceive:{1}\r\n _argsSend:{2}", _socket, _argsReceive, _argsSend);
-
-			// receive_args, send_args 아무곳에서나 꺼내와도 된다. 
-			// 둘다 동일한 CUserToken을 물고 있다.
-			CUserToken _token = _argsReceive.UserToken as CUserToken;
-			_token.SetEventArgs(_argsReceive, _argsSend);
-			// 생성된 클라이언트 소켓을 보관해 놓고 통신할 때 사용한다.
+			_token.SetEventArgs(_receiveArgs, _sendArgs);
 			_token.socket = _socket;
 
-			Console.WriteLine(" > 방금접속유저 받기비동기등록 > _socket.ReceiveAsync(_argsReceive)");
-			bool _pending = _socket.ReceiveAsync(_argsReceive);
+			//-----------------------------
+			// 메세지 받기 위해 대기하기.
+			//-----------------------------
+			Console.WriteLine(" > 접속성공후 클라이언트 메세지 받기 등록 > _socket.ReceiveAsync(_receiveArgs)");
+			bool _pending = _socket.ReceiveAsync(_receiveArgs);
 			if (!_pending)
 			{
-				ReceiveProcess(_argsReceive);
+				ReceiveProcess(_receiveArgs);
 			}
 		}
 
